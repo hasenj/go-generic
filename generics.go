@@ -1,23 +1,32 @@
+/*
+This package provides generic helper functions for generic container types,
+as well as "generic" utility functions (the other meaning of generic).
+*/
 package generic
 
 import (
 	"testing"
 )
 
+// Last returns the last element from the list
 func Last[T any](list []T) T {
 	return list[len(list)-1]
 }
 
-func OneOf[T comparable](value T, matches []T) bool {
-	for _, m := range matches {
-		if value == m {
+// OneOf checks whether an item is present in the list by iterating the list and
+// returning true as soon as it finds the item
+func OneOf[T comparable](item T, list []T) bool {
+	for _, m := range list {
+		if item == m {
 			return true
 		}
 	}
 	return false
 }
 
-// Append adds an element to the list and returns its index
+// Append adds an element to the list and returns its index. It takes a pointer
+// to the list and a bunch of items to append. The idea is to replace the common
+// but inconvenient pattern of `list = append(list, item)`
 func Append[T any](list *[]T, items ...T) int {
 	*list = append(*list, items...)
 	return len(*list) - 1
@@ -30,16 +39,21 @@ func AllocAppend[T any](list *[]T) *T {
 	return &(*list)[idx]
 }
 
+// ShrinkTo is a safe version of `list = list[:toLen]` which would panic if the
+// desired length is bigger than the length of the target list
 func ShrinkTo[T any](list *[]T, toLen int) {
 	if len(*list) > toLen {
 		*list = (*list)[:toLen]
 	}
 }
 
+// ResetSlice shrinks a slice to a zero size
 func ResetSlice[T any](list *[]T) {
 	ShrinkTo(list, 0)
 }
 
+// InsertAt is a generic function to insert an item (or multiple items) at a
+// certain position in the list
 func InsertAt[T any](list *[]T, idx int, items ...T) {
 	Append(list, items...)
 	count := len(items)
@@ -47,6 +61,7 @@ func InsertAt[T any](list *[]T, idx int, items ...T) {
 	copy((*list)[idx:idx+count], items)
 }
 
+// RemoveAt removes 1 or more items at a specific index in a list
 func RemoveAt[T any](list *[]T, idx int, count int) {
 	var zero T
 	copy((*list)[idx:], (*list)[idx+count:])
@@ -68,14 +83,21 @@ func SlicesEqual[T comparable](list1 []T, list2 []T) bool {
 	return true
 }
 
+// InitMap is short hand for `m = make(map[K]V)` so you don't have to type out
+// the full types. Just call `generic.InitMap(&m)`
 func InitMap[K comparable, V any](m *map[K]V) {
 	*m = make(map[K]V)
 }
 
+// InitSlice is short hand for `list = make(list[T])` so you don't have to type out
+// the full type. Just call `generic.InitSlice(&list)`
 func InitSlice[T any](m *[]T) {
 	*m = make([]T, 0)
 }
 
+// GrowSlice increase the size of the slice and fills the new slots with the
+// zero value. Does nothing if slice's length is already equal or greater than
+// the requested size
 func GrowSlice[T any](m *[]T, length int) {
 	if cap(*m) < length {
 		// the only thing we can do here AFACT is to allocate new size and copy
@@ -88,23 +110,27 @@ func GrowSlice[T any](m *[]T, length int) {
 	}
 }
 
+// EnsureSliceNotNil will make the slice of it's nil
 func EnsureSliceNotNil[T any](m *[]T) {
 	if *m == nil {
 		InitSlice(m)
 	}
 }
 
+// EnsureMapNotNil will make the map if it's nil
 func EnsureMapNotNil[K comparable, V any](m *map[K]V) {
 	if *m == nil {
 		InitMap(m)
 	}
 }
 
-// Slice simplifies the syntax of a struct literal by removing the ugly curly braces
+// Slice simplifies the syntax of the slice literal by removing the ugly curly
+// braces. Instead of `[]int{1, 2, 3}` you can call `generic.Slice(1, 2, 3)`
 func Slice[T any](items ...T) []T {
 	return items
 }
 
+// CappedLength
 func CappedLength[T any](slice []T, maxLen int, slack int) []T {
 	if len(slice) > maxLen+slack {
 		return slice[:maxLen]
