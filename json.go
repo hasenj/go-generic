@@ -2,6 +2,7 @@ package generic
 
 import (
 	"encoding/json"
+	"strings"
 	"os"
 )
 
@@ -14,4 +15,12 @@ func ReadFromJSONFile[T any](filepath string, obj *T) error {
 	}
 	defer file.Close()
 	return json.NewDecoder(file).Decode(obj)
+}
+
+func JSONify(obj any, indent string) string {
+	var buf strings.Builder
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent("", indent)
+	enc.Encode(obj)
+	return buf.String()
 }
