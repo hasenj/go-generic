@@ -71,6 +71,20 @@ func RemoveAt[T any](list *[]T, idx int, count int) {
 	ShrinkTo(list, len(*list)-count)
 }
 
+func SliceRemove[T comparable](list *[]T, v T) {
+	idx := IndexOf(*list, v)
+	if idx != -1 {
+		RemoveAt(list, idx, 1)
+	}
+}
+
+func SliceAddUniq[T comparable](list *[]T, v T) {
+	idx := IndexOf(*list, v)
+	if idx == -1 {
+		Append(list, v)
+	}
+}
+
 func SlicesEqual[T comparable](list1 []T, list2 []T) bool {
 	if len(list1) != len(list2) {
 		return false
@@ -122,6 +136,11 @@ func EnsureMapNotNil[K comparable, V any](m *map[K]V) {
 	if *m == nil {
 		InitMap(m)
 	}
+}
+
+func HasKey[K comparable, V any](m map[K]V, key K) bool {
+	_, ok := m[key]
+	return ok
 }
 
 // Slice simplifies the syntax of the slice literal by removing the ugly curly

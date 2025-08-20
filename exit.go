@@ -1,7 +1,6 @@
 package generic
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,7 +13,9 @@ func AddExitCleanup(fn func()) {
 }
 
 func safeCall(fn func()) {
-	defer recover()
+	defer func() {
+		recover()
+	}()
 	fn()
 }
 
@@ -33,8 +34,8 @@ func SetupSigTermCleanup() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGABRT)
 	go func() {
-		sig := <-sigChan
-		os.WriteFile("out.txt", []byte(fmt.Sprintf("Signal! %v", sig)), 0644)
+		<-sigChan
+		// os.WriteFile("out.txt", []byte(fmt.Sprintf("Signal! %v", sig)), 0644)
 
 		ExitWithCleanup(1)
 	}()
