@@ -49,3 +49,37 @@ func (s *SyncOrderedSet[T]) List() []T {
 	defer s.lock.RUnlock()
 	return slices.Clone(s.items)
 }
+
+func WithWriteLock(lock *sync.RWMutex, fn func()) {
+	lock.Lock()
+	defer lock.Unlock()
+	fn()
+}
+
+// will try to do the thing if the lock is available
+func WithTryWriteLock(lock *sync.RWMutex, fn func()) {
+	if lock.TryLock() {
+		defer lock.Unlock()
+		fn()
+	}
+}
+
+func WithReadLock(lock *sync.RWMutex, fn func()) {
+	lock.RLock()
+	defer lock.RUnlock()
+	fn()
+}
+
+func WithLock(lock *sync.Mutex, fn func()) {
+	lock.Lock()
+	defer lock.Unlock()
+	fn()
+}
+
+func WaitGroupGo(wg *sync.WaitGroup, fn func()) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		fn()
+	}()
+}

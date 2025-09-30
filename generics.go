@@ -5,6 +5,7 @@ as well as "generic" utility functions (the other meaning of generic).
 package generic
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -22,6 +23,16 @@ func OneOf[T comparable](item T, list []T) bool {
 		}
 	}
 	return false
+}
+
+func FindPtr[T any](list []T, check func(*T) bool) *T {
+	for i := range list {
+		ptr := &list[i]
+		if check(ptr) {
+			return ptr
+		}
+	}
+	return nil
 }
 
 // Append adds an element to the list and returns its index. It takes a pointer
@@ -63,12 +74,7 @@ func InsertAt[T any](list *[]T, idx int, items ...T) {
 
 // RemoveAt removes 1 or more items at a specific index in a list
 func RemoveAt[T any](list *[]T, idx int, count int) {
-	var zero T
-	copy((*list)[idx:], (*list)[idx+count:])
-	for i := len(*list) - count; i < len(*list); i++ {
-		(*list)[i] = zero
-	}
-	ShrinkTo(list, len(*list)-count)
+	*list = slices.Delete(*list, idx, idx+count)
 }
 
 func SliceRemove[T comparable](list *[]T, v T) {
@@ -188,6 +194,21 @@ func MustNotNil[T any](p *T) *T {
 func Reset[T any](ptr *T) {
 	var zero T
 	*ptr = zero
+}
+
+func IsZero[T comparable](v T) bool {
+	var zero T
+	return v == zero
+}
+
+func IsZeroBytes[T any](v T) bool {
+	buf := UnsafeRawBytes(&v)
+	for _, b := range buf {
+		if b != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func TryAndLog[T any](value T, err error) T {
