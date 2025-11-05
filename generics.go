@@ -50,8 +50,8 @@ func AllocAppend[T any](list *[]T) *T {
 	return &(*list)[idx]
 }
 
-// ShrinkTo is a safe version of `list = list[:toLen]` which would panic if the
-// desired length is bigger than the length of the target list
+// ShrinkTo is a safe version of `list = list[:toLen]` in that it would not
+// would panic if toLen is > len(list)
 func ShrinkTo[T any](list *[]T, toLen int) {
 	if len(*list) > toLen {
 		*list = (*list)[:toLen]
