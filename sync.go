@@ -83,3 +83,35 @@ func WaitGroupGo(wg *sync.WaitGroup, fn func()) {
 		fn()
 	}()
 }
+
+type SyncMap[K comparable, V any] struct {
+	_map  map[K]V
+	_lock *sync.RWMutex
+}
+
+func NewSyncMap[K comparable, V any]() *SyncMap[K, V] {
+	m := new(SyncMap[K, V])
+	m._map = make(map[K]V)
+	m._lock = new(sync.RWMutex)
+	return m
+}
+
+func (m *SyncMap[K, V]) Get(key K) (V, bool) {
+	m._lock.RLock()
+	defer m._lock.RUnlock()
+
+	value, found := m._map[key]
+	return value, found
+}
+
+func (m *SyncMap[K, V]) Set(key K, value V) {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+	m._map[key] = value
+}
+
+func (m *SyncMap[K, V]) Clear() {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+	clear(m._map)
+}
