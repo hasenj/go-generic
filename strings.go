@@ -42,3 +42,13 @@ func SharedSuffix(str1, str2 string) string {
 	}
 	return str1[len1-i:]
 }
+
+func Head(input string, sep string) (head string, tail string) {
+	idx := strings.Index(input, sep)
+	if idx == -1 {
+		return input, ""
+	}
+	head = input[:idx]
+	tail = input[idx:]
+	return
+}

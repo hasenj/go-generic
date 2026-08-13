@@ -5,12 +5,14 @@ import (
 	"sync"
 )
 
-// SyncOrderedSet - I think this must not be copied because it includes a
-// RWMutex which must not be copied .. as copying it interferes with how it
-// works
+// SyncOrderedSet uses a list and a lock and checks item duplication before adding them
 type SyncOrderedSet[T comparable] struct {
 	items []T
-	lock  sync.RWMutex
+	lock  *sync.RWMutex
+}
+
+func (s *SyncOrderedSet[T]) Init() {
+	s.lock = new(sync.RWMutex)
 }
 
 func (s *SyncOrderedSet[T]) Add(item T) {
@@ -91,9 +93,13 @@ type SyncMap[K comparable, V any] struct {
 
 func NewSyncMap[K comparable, V any]() *SyncMap[K, V] {
 	m := new(SyncMap[K, V])
+	m.Init()
+	return m
+}
+
+func (m *SyncMap[K, V]) Init() {
 	m._map = make(map[K]V)
 	m._lock = new(sync.RWMutex)
-	return m
 }
 
 func (m *SyncMap[K, V]) Get(key K) (V, bool) {
@@ -108,6 +114,24 @@ func (m *SyncMap[K, V]) Set(key K, value V) {
 	m._lock.Lock()
 	defer m._lock.Unlock()
 	m._map[key] = value
+}
+
+// LoadOrStore inserts value if key is absent. Returns the map value and whether
+// it was already present (true = loaded existing, false = stored value).
+func (m *SyncMap[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+	if existing, ok := m._map[key]; ok {
+		return existing, true
+	}
+	m._map[key] = value
+	return value, false
+}
+
+func (m *SyncMap[K, V]) Remove(key K) {
+	m._lock.Lock()
+	defer m._lock.Unlock()
+	delete(m._map, key)
 }
 
 func (m *SyncMap[K, V]) Clear() {
